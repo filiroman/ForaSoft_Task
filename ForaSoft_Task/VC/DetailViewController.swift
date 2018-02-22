@@ -43,6 +43,7 @@ class DetailViewController: UITableViewController {
       self.albumSongs.removeAll()
       self.albumSongs.append(contentsOf: songs!)
       self.tableView?.reloadData()
+      self.navigationItem.title = self.albumItem?.artistName!
       
       IndicatorView.sharedIndicator.hideLoading()
     }

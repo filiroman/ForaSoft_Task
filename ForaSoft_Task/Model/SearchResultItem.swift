@@ -8,10 +8,12 @@
 
 import Foundation
 
+//NOTE: I've created one class for both album and song entities for simplicity
+//      (they have a lot in  common)
+//      In future it's easy to subclass SearchResultItem and inline other entities explicitly
 class SearchResultItem : NSObject {
   var itemID: String?
   var desc: String?
-  
   var wrapperType: String?
   var trackName: String?
   var artistName: String?

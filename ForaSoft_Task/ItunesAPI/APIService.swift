@@ -10,6 +10,7 @@ import UIKit
 
 typealias JSONDict = [String:Any]
 
+// A general interface for sending requests to API
 class APIService: NSObject {
   
   // Singleton instance

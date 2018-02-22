@@ -8,6 +8,7 @@
 
 import UIKit
 
+// A dedicated interface to search for media entities
 class APISearchManager: NSObject {
   
   // Singleton instance
@@ -33,8 +34,7 @@ class APISearchManager: NSObject {
             })
             return
           }
-          //NOTE: debug
-          //print(json)
+          
           guard let results = json["results"] as? [JSONDict] else { return }
           var albums = [SearchResultItem]()
           
@@ -63,6 +63,7 @@ class APISearchManager: NSObject {
       
       else if entity == Constants.Entity.song {
         
+        // We search for song via "lookup" API
         APIService.sharedService.lookup(parameters) { responseObject, error in
           guard let json = responseObject, error == nil else {
             
@@ -73,7 +74,6 @@ class APISearchManager: NSObject {
             return
           }
           
-          print(json)
           guard let results = json["results"] as? [JSONDict] else { return }
           var albums = [SearchResultItem]()
           

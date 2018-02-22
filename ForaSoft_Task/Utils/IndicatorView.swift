@@ -33,12 +33,4 @@ class IndicatorView: NSObject {
     activityIndicator.frame = CGRect(origin: activityIndicator.center, size: CGSize(width: 60, height: 60))
     activityIndicator.backgroundColor = UIColor.gray
   }
-  /*
-  // Only override draw() if you perform custom drawing.
-  // An empty implementation adversely affects performance during animation.
-  override func draw(_ rect: CGRect) {
-      // Drawing code
-  }
-  */
-
 }

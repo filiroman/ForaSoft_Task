@@ -22,7 +22,11 @@ class AlbumCell: UICollectionViewCell {
   func updateData() {
     albumLabel.text = albumItem?.albumName
     artistLabel.text = albumItem?.artistName
-    albumCover.setImageFrom(url: (albumItem?.artworkUrl)!)
+    
+    guard let albumURL = albumItem?.artworkUrl else {
+      return
+    }
+    albumCover.setImageFrom(url: albumURL)
     
   }
 }
