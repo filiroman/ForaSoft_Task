@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  ForaSoft_Task
+//  ForaSoft_Taskf
 //
 //  Created by Roman Filippov on 15/02/2018.
 //  Copyright © 2018 romanfilippov. All rights reserved.
@@ -16,6 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
     // Override point for customization after application launch.
+    
     return true
   }
 

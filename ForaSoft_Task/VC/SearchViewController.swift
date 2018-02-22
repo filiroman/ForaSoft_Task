@@ -8,87 +8,139 @@
 
 import UIKit
 
-private let reuseIdentifier = "Cell"
+private let reuseIdentifier = "albumCell"
 
-class SearchViewController: UICollectionViewController {
+class SearchViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout, UISearchBarDelegate  {
+  
+  private var albums : Array<SearchResultItem> = Array<SearchResultItem>()
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+  override func viewDidLoad() {
+    super.viewDidLoad()
 
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
+    // Uncomment the following line to preserve selection between presentations
+    self.clearsSelectionOnViewWillAppear = true
+    self.collectionView?.register(UICollectionReusableView.classForCoder(), forSupplementaryViewOfKind: "UICollectionElementKindSectionHeader", withReuseIdentifier: "emptyHeader")
+  }
+  
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+  }
 
-        // Register cell classes
-        self.collectionView!.register(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
-
-        // Do any additional setup after loading the view.
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using [segue destinationViewController].
-        // Pass the selected object to the new view controller.
-    }
-    */
-
-    // MARK: UICollectionViewDataSource
-
-    override func numberOfSections(in collectionView: UICollectionView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 0
-    }
-
-
-    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of items
-        return 0
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
+  override func didReceiveMemoryWarning() {
+    super.didReceiveMemoryWarning()
+    // Dispose of any resources that can be recreated.
+  }
+  
+  func showErrorWithDescription(desc: String) {
     
-        // Configure the cell
+    let alert = UIAlertController(title: "Error", message: desc, preferredStyle: UIAlertControllerStyle.alert)
+    alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
+    self.present(alert, animated: true, completion: nil)
+  }
+  
+  func searchForTerm(term: String) {
     
-        return cell
+    IndicatorView.sharedIndicator.showLoading()
+    APISearchManager.sharedManager.fetchMedia(with: ["term":term], media: Constants.Media.music, entity: Constants.Entity.album) { albums, error in
+      
+      if let error = error {
+        
+        print("Error: ", error)
+        self.showErrorWithDescription(desc: error.localizedDescription)
+        
+      } else if let albums = albums {
+        
+        self.albums.removeAll()
+        //NOTE: Albums now are sorted in place for simplicity, in the future we can move that to a closure variable
+        //      in fetchMedia func
+        self.albums.append(contentsOf: albums.sorted(by: { $0.albumName! < $1.albumName! }))
+        self.collectionView?.reloadSections(IndexSet([1]))
+        
+      }
+      IndicatorView.sharedIndicator.hideLoading()
     }
+  }
+  
+  // MARK: - Navigation
 
-    // MARK: UICollectionViewDelegate
+  // In a storyboard-based application, you will often want to do a little preparation before navigation
+  override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+    let vc = segue.destination as! DetailViewController
+    let selectedIndex = self.collectionView?.indexPathsForSelectedItems![0].row
+    vc.albumItem = self.albums[selectedIndex!]
+  }
+  
 
-    /*
-    // Uncomment this method to specify if the specified item should be highlighted during tracking
-    override func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
-        return true
+  // MARK: UICollectionViewDataSource
+
+  override func numberOfSections(in collectionView: UICollectionView) -> Int {
+    return 2
+  }
+
+
+  override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    if (section == 0) {
+      return 0
     }
-    */
-
-    /*
-    // Uncomment this method to specify if the specified item should be selected
-    override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    */
-
-    /*
-    // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
-    override func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
     
+    if (albums.count == 0) {
+      self.collectionView?.setEmptyMessage("Nothing to show :(")
+    } else {
+      self.collectionView?.resetEmptyMessage()
     }
-    */
+    return albums.count
+  }
+
+  override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    let cell : AlbumCell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! AlbumCell
+  
+      cell.albumItem = albums[indexPath.row]
+      return cell
+  }
+  
+  override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    if (indexPath.section == 1)
+    {
+      self.performSegue(withIdentifier: "showDetail", sender: self)
+    }
+  }
+  
+  func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+    if (section == 0) {
+      return CGSize(width: view.frame.width, height: 56)
+    }
+    return CGSize.zero
+  }
+  
+  override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+    
+    if (kind == UICollectionElementKindSectionHeader) {
+     
+      if (indexPath.section == 0) {
+        let headerView:UICollectionReusableView =  collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionElementKindSectionHeader, withReuseIdentifier: "searchBarHeader", for: indexPath)
+        return headerView
+      }
+      
+      //return empty header view
+      if (indexPath.section == 1) {
+          return collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionElementKindSectionHeader, withReuseIdentifier: "emptyHeader", for: indexPath)
+      }
+    }
+    return UICollectionReusableView()
+  }
+  
+  //MARK: - SEARCH BAR
+  
+  func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+    if(!(searchBar.text?.isEmpty)!){
+      searchForTerm(term: searchBar.text!)
+    }
+  }
+  
+  func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+    if(!searchText.isEmpty){
+      searchForTerm(term: searchBar.text!)
+    }
+  }
 
 }

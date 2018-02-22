@@ -8,33 +8,26 @@
 
 import UIKit
 
-enum MediaType {
-  
-  // Media types from :
-  // https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/
-  //
-  case movie
-  case podcast
-  case music
-  case musicVideo
-  case audiobook
-  case shortFilm
-  case tvShow
-  case software
-  case ebook
-  case all
-  
-  static func allTypes() -> [Media] {
-    return [.movie, .podcast, .music, .musicVideo, .audiobook, .shortFilm, .tvShow, .software, .ebook, .all]
-  }
-}
+typealias JSONDict = [String:Any]
 
 class APIService: NSObject {
   
   // Singleton instance
   static let sharedService = APIService()
   
-  public func sendRequest(_ baseURL: String, parameters: [String: String], completion: @escaping ([String: Any]?, Error?) -> Void) {
+  // Performs iTunes search using "search" technique
+  //
+  public func search(_ parameters: [String: String], completion: @escaping (JSONDict?, Error?) -> Void) {
+    sendRequest(Constants.baseSearchURL, parameters: parameters, completion: completion)
+  }
+  
+  // Performs iTunes search using "lookup" technique
+  //
+  public func lookup(_ parameters: [String: String], completion: @escaping (JSONDict?, Error?) -> Void) {
+    sendRequest(Constants.baseLookupURL, parameters: parameters, completion: completion)
+  }
+  
+  public func sendRequest(_ baseURL: String, parameters: [String: String], completion: @escaping (JSONDict?, Error?) -> Void) {
     
     // Parse and add URL request parameters here from 'parameters' dict
     var components = URLComponents(string: baseURL)!
@@ -42,7 +35,7 @@ class APIService: NSObject {
       URLQueryItem(name: key, value: value)
     }
     
-    // Need to escape + manually
+    // Need to escape '+' manually
     // More: https://stackoverflow.com/questions/41561853/couldnt-encode-plus-character-in-url-swift
     // And here: http://www.ietf.org/rfc/rfc1738.txt
     components.percentEncodedQuery = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
@@ -58,7 +51,7 @@ class APIService: NSObject {
       }
       
       // deserialize and return data
-      let responseObject = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+      let responseObject = (try? JSONSerialization.jsonObject(with: data)) as? JSONDict
       completion(responseObject, nil)
     }
     task.resume()
